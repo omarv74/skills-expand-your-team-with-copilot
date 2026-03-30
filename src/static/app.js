@@ -569,6 +569,21 @@ document.addEventListener("DOMContentLoaded", () => {
         `
         }
       </div>
+      <div class="share-buttons">
+        <span class="share-label">Share:</span>
+        <button class="share-btn share-copy tooltip" data-activity="${name}" aria-label="Copy link">
+          🔗
+          <span class="tooltip-text">Copy link</span>
+        </button>
+        <button class="share-btn share-email tooltip" data-activity="${name}" aria-label="Share via email">
+          ✉️
+          <span class="tooltip-text">Share via email</span>
+        </button>
+        <button class="share-btn share-twitter tooltip" data-activity="${name}" aria-label="Share on X (Twitter)">
+          𝕏
+          <span class="tooltip-text">Share on X (Twitter)</span>
+        </button>
+      </div>
     `;
 
     // Add click handlers for delete buttons
@@ -587,7 +602,62 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
+    // Add click handlers for share buttons
+    activityCard.querySelector(".share-copy").addEventListener("click", () => {
+      shareActivityCopyLink(name);
+    });
+    activityCard.querySelector(".share-email").addEventListener("click", () => {
+      shareActivityEmail(name, details);
+    });
+    activityCard.querySelector(".share-twitter").addEventListener("click", () => {
+      shareActivityTwitter(name, details);
+    });
+
     activitiesList.appendChild(activityCard);
+  }
+
+  // Social sharing functions
+  function getActivityShareUrl(name) {
+    const url = new URL(window.location.href);
+    url.search = "";
+    url.searchParams.set("activity", name);
+    return url.toString();
+  }
+
+  function shareActivityCopyLink(name) {
+    const url = getActivityShareUrl(name);
+    navigator.clipboard.writeText(url).then(() => {
+      showShareToast("Link copied to clipboard!");
+    }).catch(() => {
+      showShareToast("Failed to copy link. Please try again or copy manually.");
+    });
+  }
+
+  function shareActivityEmail(name, details) {
+    const url = getActivityShareUrl(name);
+    const subject = encodeURIComponent(`Check out: ${name}`);
+    const body = encodeURIComponent(
+      `Hi!\n\nI wanted to share this activity with you:\n\n${name}\n${details.description}\n\nSchedule: ${details.schedule}\n\nLearn more: ${url}`
+    );
+    window.open(`mailto:?subject=${subject}&body=${body}`, "_blank");
+  }
+
+  function shareActivityTwitter(name, details) {
+    const url = getActivityShareUrl(name);
+    const truncated = details.description.length > 80 ? details.description.substring(0, 80) + "..." : details.description;
+    const text = encodeURIComponent(`Check out "${name}" at Mergington High School! ${truncated}`);
+    window.open(`https://twitter.com/intent/tweet?text=${text}&url=${encodeURIComponent(url)}`, "_blank");
+  }
+
+  function showShareToast(message) {
+    const toast = document.getElementById("share-toast");
+    toast.textContent = message;
+    toast.classList.remove("hidden");
+    toast.classList.add("show");
+    setTimeout(() => {
+      toast.classList.remove("show");
+      toast.classList.add("hidden");
+    }, 2500);
   }
 
   // Event listeners for search and filter
